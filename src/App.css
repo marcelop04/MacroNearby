@@ -1,0 +1,432 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* EL ENTORNO DE LA PC (Fondo del proyector/pantalla) */
+body {
+  background-color: #cbd5e1;
+  color: #333;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+/* EL CONTENEDOR MÓVIL (El "Celular") */
+.dashboard-container {
+  width: 100%;
+  max-width: 390px; /* Ancho exacto de un smartphone promedio */
+  height: 844px; /* Alto proporcional */
+  max-height: 95vh;
+  background-color: #f4f7f6;
+  border-radius: 40px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  border: 12px solid #1e293b; /* Marco del celular */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* Evita que el contenido se salga del marco del celular */
+  position: relative;
+}
+
+/* EL MENÚ SUPERIOR (Adaptado para móvil) */
+.sidebar {
+  background-color: #1a202c;
+  color: white;
+  padding: 25px 15px 15px;
+  text-align: center;
+}
+.sidebar h2 {
+  margin-bottom: 15px;
+  color: #48bb78;
+  font-size: 1.3rem;
+}
+.sidebar ul {
+  display: flex;
+  overflow-x: auto;
+  gap: 8px;
+  padding-bottom: 5px;
+  scrollbar-width: none;
+  user-select: none; /* Oculta la barra de scroll en Firefox */
+}
+.sidebar ul::-webkit-scrollbar {
+  display: none; /* Oculta la barra en Chrome/Safari */
+}
+.sidebar li {
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  border-radius: 15px;
+  white-space: nowrap;
+  background-color: #2d3748;
+  transition: background 0.3s ease;
+}
+.sidebar li.active {
+  background-color: #48bb78;
+  font-weight: bold;
+}
+
+/* CONTENIDO PRINCIPAL SCROLLEABLE */
+.main-content {
+  flex: 1;
+  padding: 20px 15px;
+  overflow-y: auto;
+}
+.header {
+  margin-bottom: 20px;
+  text-align: center;
+}
+.header h1 {
+  font-size: 1.3rem;
+  margin-bottom: 5px;
+}
+.header p {
+  color: #718096;
+  font-size: 0.85rem;
+}
+
+/* PANELES Y COMPONENTES */
+.panel {
+  background: white;
+  padding: 15px;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  margin-bottom: 15px;
+}
+
+.progress-bar-container {
+  width: 100%;
+  background-color: #e2e8f0;
+  border-radius: 10px;
+  height: 12px;
+  margin: 10px 0;
+}
+.progress-bar {
+  background-color: #48bb78;
+  height: 100%;
+  border-radius: 10px;
+  transition: width 0.5s ease;
+}
+
+.macros-detalles {
+  display: flex;
+  gap: 8px; /* Reducimos un poco el espacio entre ellos */
+  margin-top: 15px;
+  user-select: none; /* Evita el sombreado azul aquí también */
+}
+.macros-detalles::-webkit-scrollbar {
+  display: none;
+}
+.macro-item {
+  flex: 1; /* ¡La magia! Hace que los 3 se repartan el espacio exactamente igual */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #f7fafc;
+  padding: 10px 5px;
+  border-radius: 8px;
+  font-size: 0.75rem; /* Letra un poco más pequeña para que encaje */
+  text-align: center;
+}
+
+/* FILTROS DE COMIDA */
+.filtros-comida h3 {
+  font-size: 1rem;
+  margin-bottom: 10px;
+}
+.botones-filtro {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.btn {
+  padding: 8px 15px;
+  border: none;
+  border-radius: 20px;
+  background: #e2e8f0;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: bold;
+}
+.btn.activo {
+  background: #48bb78;
+  color: white;
+}
+
+/* TARJETAS DEL RADAR */
+.radar-opciones h2 {
+  font-size: 1.1rem;
+}
+.lista-opciones {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 15px;
+}
+.opcion-card {
+  border: 1px solid #e2e8f0;
+  padding: 15px;
+  border-radius: 10px;
+}
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.tipo-badge,
+.match-badge {
+  padding: 4px 8px;
+  border-radius: 15px;
+  font-size: 0.75rem;
+  font-weight: bold;
+}
+.tipo-badge {
+  background: #edf2f7;
+}
+.match-badge {
+  background: #c6f6d5;
+  color: #22543d;
+}
+.opcion-card h3 {
+  font-size: 1rem;
+  margin-bottom: 5px;
+}
+.instruccion {
+  margin: 8px 0;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+.card-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 10px;
+}
+.macros-resumen {
+  font-size: 0.75rem;
+  color: #718096;
+}
+.precio {
+  font-weight: bold;
+  color: #2d3748;
+  font-size: 0.9rem;
+  align-self: flex-end;
+}
+
+/* VISTAS EXTRAS (Perfil y Comunidad) */
+.subtitle {
+  color: #718096;
+  margin-bottom: 15px;
+  font-size: 0.85rem;
+}
+.perfil-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+.info-box {
+  background: #f7fafc;
+  padding: 15px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+}
+.highlight {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #2d3748;
+  margin: 5px 0;
+}
+.premium-badge {
+  background: #ecc94b;
+  color: #744210;
+  padding: 4px 8px;
+  border-radius: 15px;
+  font-size: 0.75rem;
+  font-weight: bold;
+  display: inline-block;
+  margin-top: 5px;
+}
+.detalle {
+  font-size: 0.8rem;
+  color: #4a5568;
+}
+.preferencias ul {
+  list-style: none;
+  margin-top: 10px;
+  font-size: 0.85rem;
+}
+.preferencias li {
+  padding: 4px 0;
+  color: #4a5568;
+}
+
+.feed-comunidad {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.post {
+  border: 1px solid #e2e8f0;
+  padding: 12px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+.post-header {
+  margin-bottom: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  justify-content: space-between;
+  align-items: center;
+}
+.badge-validacion {
+  background: #ebf8ff;
+  color: #2b6cb0;
+  padding: 3px 6px;
+  border-radius: 8px;
+  font-size: 0.7rem;
+  font-weight: bold;
+}
+.badge-reto {
+  background: #fff5f5;
+  color: #c53030;
+  padding: 3px 6px;
+  border-radius: 8px;
+  font-size: 0.7rem;
+  font-weight: bold;
+}
+.btn-small {
+  background: #edf2f7;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 8px;
+  font-size: 0.8rem;
+}
+/* ESTILOS PARA EL MAPA Y ALTERNADOR DE VISTAS */
+.radar-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 15px;
+}
+.toggle-vista {
+  display: flex;
+  background: #e2e8f0;
+  border-radius: 20px;
+  overflow: hidden;
+}
+.btn-vista {
+  padding: 6px 12px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: bold;
+  color: #4a5568;
+  transition: all 0.3s ease;
+}
+.btn-vista.activo {
+  background: #48bb78;
+  color: white;
+}
+
+.mapa-simulado {
+  margin-top: 15px;
+}
+.mapa-canvas {
+  width: 100%;
+  height: 250px;
+  background-color: #e2e8f0;
+  background-image:
+    linear-gradient(white 2px, transparent 2px),
+    linear-gradient(90deg, white 2px, transparent 2px),
+    linear-gradient(rgba(255, 255, 255, 0.3) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.3) 1px, transparent 1px);
+  background-size:
+    100px 100px,
+    100px 100px,
+    20px 20px,
+    20px 20px;
+  border-radius: 12px;
+  position: relative;
+  overflow: hidden;
+  border: 2px solid #cbd5e1;
+}
+
+.pin-usuario {
+  position: absolute;
+  top: 45%;
+  left: 45%;
+  background: white;
+  padding: 4px 8px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+}
+.pulso {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 30px;
+  height: 30px;
+  background: rgba(72, 187, 120, 0.4);
+  border-radius: 50%;
+  animation: latido 2s infinite;
+  z-index: -1;
+}
+@keyframes latido {
+  0% {
+    transform: translate(-50%, -50%) scale(0.5);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(2);
+    opacity: 0;
+  }
+}
+
+.pin-local {
+  position: absolute;
+  background: white;
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: bold;
+  color: #2d3748;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 1px solid #48bb78;
+}
+.match-pequeño {
+  background: #48bb78;
+  color: white;
+  font-size: 0.6rem;
+  padding: 2px 4px;
+  border-radius: 4px;
+  margin-bottom: 2px;
+}
+.mapa-nota {
+  text-align: center;
+  font-size: 0.75rem;
+  color: #a0aec0;
+  margin-top: 10px;
+  font-style: italic;
+}
+.no-options {
+  text-align: center;
+  color: #718096;
+  padding: 20px;
+}
