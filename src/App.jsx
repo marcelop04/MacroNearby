@@ -4,9 +4,13 @@ import MacroTracker from "./components/MacroTracker";
 import RadarOpciones from "./components/RadarOpciones";
 import MiPerfil from "./components/MiPerfil";
 import Comunidad from "./components/Comunidad";
+import Login from "./components/Login"; // <-- Importamos tu Login
 import { userMacros } from "./data/mockData";
 
 function App() {
+  // NUEVO: Estado para controlar si el usuario inició sesión
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  
   const [comidaActual, setComidaActual] = useState("Todas");
   const [vistaActual, setVistaActual] = useState("Radar");
 
@@ -22,23 +26,18 @@ function App() {
     scrollLeft.current = menuRef.current.scrollLeft;
   };
 
-  const handleMouseLeave = () => {
-    isDown.current = false;
-  };
-
-  const handleMouseUp = () => {
-    isDown.current = false;
-  };
+  const handleMouseLeave = () => { isDown.current = false; };
+  const handleMouseUp = () => { isDown.current = false; };
 
   const handleMouseMove = (e) => {
     if (!isDown.current) return;
-    e.preventDefault(); // Evita que se seleccione el texto en azul
+    e.preventDefault(); 
     const x = e.pageX - menuRef.current.offsetLeft;
-    const walk = (x - startX.current) * 1.5; // Ajusta la velocidad de desplazamiento
+    const walk = (x - startX.current) * 1.5; 
     menuRef.current.scrollLeft = scrollLeft.current - walk;
   };
 
-  // Función para renderizar la vista seleccionada
+  // Función para renderizar la vista seleccionada del Dashboard
   const renderVista = () => {
     switch (vistaActual) {
       case "Radar":
@@ -57,7 +56,7 @@ function App() {
                     >
                       {tipo}
                     </button>
-                  ),
+                  )
                 )}
               </div>
             </div>
@@ -72,9 +71,7 @@ function App() {
         return (
           <div className="panel">
             <h2>Historial de Comidas</h2>
-            <p>
-              Aquí se listarán las comidas registradas y recompensas ganadas.
-            </p>
+            <p>Aquí se listarán las comidas registradas y recompensas ganadas.</p>
           </div>
         );
       default:
@@ -82,6 +79,16 @@ function App() {
     }
   };
 
+  // VISTA DE AUTENTICACIÓN: Si no está logueado, centramos el contenedor de Login
+  if (!isLoggedIn) {
+    return (
+      <div className="auth-container">
+        <Login onLogin={() => setIsLoggedIn(true)} />
+      </div>
+    );
+  }
+
+  // VISTA PRINCIPAL: Se ejecuta solo si isLoggedIn es true
   return (
     <div className="dashboard-container">
       <aside className="sidebar">
@@ -117,6 +124,10 @@ function App() {
               onClick={() => setVistaActual("Comunidad")}
             >
               Comunidad
+            </li>
+            {/* Opcional: Botón para cerrar sesión */}
+            <li className="logout-nav" onClick={() => setIsLoggedIn(false)}>
+              Cerrar Sesión
             </li>
           </ul>
         </nav>
