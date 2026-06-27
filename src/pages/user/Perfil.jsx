@@ -15,12 +15,23 @@ const Perfil = () => {
     height: userData?.profile.height || 170,
     activityLevel: userData?.profile.activityLevel || 'sedentary',
     goal: userData?.profile.goal || 'maintain',
-    allergies: userData?.profile.allergies || []
+    allergies: userData?.profile.allergies || [],
+    healthCondition: userData?.profile.healthCondition || '',
+    dietType: userData?.profile.dietType || ''
   });
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    if (name === "goal" && !["health", "diet"].includes(value)) {
+      setFormData(prev => ({
+        ...prev,
+        goal: value,
+        healthCondition: '',
+        dietType: ''
+      }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleAllergyToggle = (allergy) => {
@@ -40,7 +51,8 @@ const Perfil = () => {
       Number(formData.weight),
       Number(formData.height),
       formData.activityLevel,
-      formData.goal
+      formData.goal,
+      formData
     );
 
     setUserData({
@@ -78,72 +90,115 @@ const Perfil = () => {
           </div>
 
           <div className="glass-panel flex flex-col gap-3">
-            <div className="flex justify-between" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem' }}>
+            <div className="flex justify-between" style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem' }}>
               <span className="text-muted text-sm">Meta Diaria</span>
               <span style={{ fontWeight: 'bold' }}>{userData.metrics.target} Kcal</span>
             </div>
-            <div className="flex justify-between" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem' }}>
+            <div className="flex justify-between" style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem' }}>
               <span className="text-muted text-sm">Peso Actual</span>
               <span>{userData.profile.weight} kg</span>
             </div>
-            <div className="flex justify-between" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem' }}>
+            <div className="flex justify-between" style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem' }}>
               <span className="text-muted text-sm">Altura</span>
               <span>{userData.profile.height} cm</span>
             </div>
-            <div className="flex justify-between" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem' }}>
+            <div className="flex justify-between" style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem' }}>
               <span className="text-muted text-sm">Actividad</span>
               <span style={{ textTransform: 'capitalize' }}>{userData.profile.activityLevel}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted text-sm">Objetivo</span>
-              <span style={{ textTransform: 'capitalize' }}>{userData.profile.goal === 'lose' ? 'Perder peso' : userData.profile.goal === 'gain' ? 'Ganar músculo' : 'Mantener'}</span>
+              <span>
+                {userData.profile.goal === 'lose' ? 'Pérdida de peso (Déficit)' : 
+                 userData.profile.goal === 'gain' ? 'Ganancia de masa (Superávit)' : 
+                 userData.profile.goal === 'recomp' ? 'Recomposición corporal' : 
+                 userData.profile.goal === 'maintain' ? 'Mantenimiento de peso' : 
+                 userData.profile.goal === 'health' ? `Salud (${userData.profile.healthCondition === 'celiac' ? 'Sin Gluten' : userData.profile.healthCondition === 'diabetes' ? 'Diabético' : 'Hipertensión'})` : 
+                 `Dieta (${userData.profile.dietType === 'keto' ? 'Keto' : userData.profile.dietType === 'vegan' ? 'Vegano' : 'Vegetariano'})`}
+              </span>
             </div>
           </div>
         </div>
       ) : (
-        <form onSubmit={handleSave} className="glass-panel flex flex-col gap-3">
+        <form onSubmit={handleSave} className="glass-panel flex flex-col gap-3" style={{ padding: '1.25rem', maxHeight: '550px', overflowY: 'auto' }}>
           <div className="flex flex-col">
             <label className="text-xs text-muted mb-1">Nombre</label>
-            <input type="text" name="name" value={formData.name} onChange={handleChange} required />
+            <input type="text" name="name" value={formData.name} onChange={handleChange} required style={{ padding: '0.65rem 0.85rem' }} />
           </div>
 
-          <div className="flex gap-2">
-            <div className="flex flex-col flex-1">
-              <label className="text-xs text-muted mb-1">Sexo</label>
-              <select name="gender" value={formData.gender} onChange={handleChange}>
-                <option value="male">Hombre</option>
-                <option value="female">Mujer</option>
-              </select>
-            </div>
-            <div className="flex flex-col flex-1">
-              <label className="text-xs text-muted mb-1">Edad</label>
-              <input type="number" name="age" value={formData.age} onChange={handleChange} required />
-            </div>
+          <div className="flex flex-col">
+            <label className="text-xs text-muted mb-1">Sexo</label>
+            <select name="gender" value={formData.gender} onChange={handleChange} style={{ padding: '0.65rem 0.85rem' }}>
+              <option value="male">Hombre</option>
+              <option value="female">Mujer</option>
+            </select>
           </div>
 
-          <div className="flex gap-2">
-            <div className="flex flex-col flex-1">
-              <label className="text-xs text-muted mb-1">Peso (kg)</label>
-              <input type="number" name="weight" value={formData.weight} onChange={handleChange} required />
-            </div>
-            <div className="flex flex-col flex-1">
-              <label className="text-xs text-muted mb-1">Altura (cm)</label>
-              <input type="number" name="height" value={formData.height} onChange={handleChange} required />
-            </div>
+          <div className="flex flex-col">
+            <label className="text-xs text-muted mb-1">Edad (años)</label>
+            <input type="number" name="age" value={formData.age} onChange={handleChange} required style={{ padding: '0.65rem 0.85rem' }} />
+          </div>
+
+          <div className="flex flex-col">
+            <label className="text-xs text-muted mb-1">Peso (kg)</label>
+            <input type="number" name="weight" value={formData.weight} onChange={handleChange} required style={{ padding: '0.65rem 0.85rem' }} />
+          </div>
+
+          <div className="flex flex-col">
+            <label className="text-xs text-muted mb-1">Altura (cm)</label>
+            <input type="number" name="height" value={formData.height} onChange={handleChange} required style={{ padding: '0.65rem 0.85rem' }} />
           </div>
 
           <div className="flex flex-col">
             <label className="text-xs text-muted mb-1">Actividad</label>
-            <select name="activityLevel" value={formData.activityLevel} onChange={handleChange}>
-              <option value="sedentary">Sedentario</option>
-              <option value="light">Ligero</option>
-              <option value="moderate">Moderado</option>
-              <option value="active">Activo</option>
-              <option value="very_active">Muy Activo</option>
+            <select name="activityLevel" value={formData.activityLevel} onChange={handleChange} style={{ padding: '0.65rem 0.85rem' }}>
+              <option value="sedentary">Sedentario (Sin ejercicio)</option>
+              <option value="light">Ligero (1-3 días/semana)</option>
+              <option value="moderate">Moderado (3-5 días/semana)</option>
+              <option value="active">Activo (6-7 días/semana)</option>
+              <option value="very_active">Muy Activo (Ejercicio extremo)</option>
             </select>
           </div>
 
-          <button type="submit" className="btn btn-primary mt-2">
+          <div className="flex flex-col">
+            <label className="text-xs text-muted mb-1">Objetivo Principal</label>
+            <select name="goal" value={formData.goal} onChange={handleChange} style={{ padding: '0.65rem 0.85rem' }}>
+              <option value="lose">Pérdida de peso (Déficit calórico)</option>
+              <option value="gain">Ganancia de masa muscular (Superávit calórico)</option>
+              <option value="recomp">Recomposición corporal</option>
+              <option value="maintain">Mantenimiento de peso</option>
+              <option value="health">Condición de Salud Clínica</option>
+              <option value="diet">Restricción / Preferencia Dietética</option>
+            </select>
+          </div>
+
+          {/* Conditional health field */}
+          {formData.goal === 'health' && (
+            <div className="flex flex-col">
+              <label className="text-xs text-muted mb-1">¿Qué condición debemos cuidar?</label>
+              <select name="healthCondition" value={formData.healthCondition} onChange={handleChange} required style={{ padding: '0.65rem 0.85rem' }}>
+                <option value="">-- Seleccionar --</option>
+                <option value="celiac">Celiaquía / Sin Gluten</option>
+                <option value="diabetes">Control de Azúcar / Diabético</option>
+                <option value="hypertension">Hipertensión</option>
+              </select>
+            </div>
+          )}
+
+          {/* Conditional diet field */}
+          {formData.goal === 'diet' && (
+            <div className="flex flex-col">
+              <label className="text-xs text-muted mb-1">¿Cuál es tu tipo de alimentación?</label>
+              <select name="dietType" value={formData.dietType} onChange={handleChange} required style={{ padding: '0.65rem 0.85rem' }}>
+                <option value="">-- Seleccionar --</option>
+                <option value="vegan">Vegano</option>
+                <option value="vegetarian">Vegetariano</option>
+                <option value="keto">Keto</option>
+              </select>
+            </div>
+          )}
+
+          <button type="submit" className="btn btn-primary mt-2" style={{ padding: '0.75rem' }}>
             <Save size={16} /> Guardar Cambios
           </button>
         </form>

@@ -24,23 +24,25 @@ const Historial = () => {
 
       {/* Summary Box */}
       <div className="glass-panel text-center" style={{ padding: '1.25rem' }}>
-        <div className="flex justify-around items-center">
-          <div className="flex flex-col">
-            <span style={{ fontSize: '1.4rem', fontWeight: 'bold', color: 'var(--warning)' }}>{dailyProgress.consumedCalories}</span>
-            <span className="text-xs text-muted">Kcal Totales</span>
+        <div className="flex justify-around items-center" style={{ gap: '0.25rem' }}>
+          <div className="flex flex-col flex-1 text-center">
+            <span style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'var(--warning)' }}>{dailyProgress.consumedCalories}</span>
+            <span className="text-xs text-muted" style={{ fontSize: '0.65rem' }}>Kcal</span>
           </div>
-          <div style={{ height: '35px', width: '1px', background: 'var(--border-color)' }}></div>
-          <div className="flex flex-col">
-            <span style={{ fontSize: '1.05rem', fontWeight: 'bold', color: 'var(--secondary)' }}>{dailyProgress.consumedProtein}g</span>
-            <span className="text-xs text-muted">Proteína</span>
+          <div style={{ height: '25px', width: '1px', background: 'var(--border-color)' }}></div>
+          <div className="flex flex-col flex-1 text-center">
+            <span style={{ fontSize: '1rem', fontWeight: 'bold', color: 'var(--secondary)' }}>{dailyProgress.consumedProtein}g</span>
+            <span className="text-xs text-muted" style={{ fontSize: '0.65rem' }}>Proteína</span>
           </div>
-          <div className="flex flex-col">
-            <span style={{ fontSize: '1.05rem', fontWeight: 'bold', color: 'var(--accent)' }}>{dailyProgress.consumedCarbs}g</span>
-            <span className="text-xs text-muted">Carbos</span>
+          <div style={{ height: '25px', width: '1px', background: 'var(--border-color)' }}></div>
+          <div className="flex flex-col flex-1 text-center">
+            <span style={{ fontSize: '1rem', fontWeight: 'bold', color: 'var(--accent)' }}>{dailyProgress.consumedCarbs}g</span>
+            <span className="text-xs text-muted" style={{ fontSize: '0.65rem' }}>Carbos</span>
           </div>
-          <div className="flex flex-col">
-            <span style={{ fontSize: '1.05rem', fontWeight: 'bold', color: 'var(--warning)' }}>{dailyProgress.consumedFats}g</span>
-            <span className="text-xs text-muted">Grasas</span>
+          <div style={{ height: '25px', width: '1px', background: 'var(--border-color)' }}></div>
+          <div className="flex flex-col flex-1 text-center">
+            <span style={{ fontSize: '1rem', fontWeight: 'bold', color: 'var(--warning)' }}>{dailyProgress.consumedFats}g</span>
+            <span className="text-xs text-muted" style={{ fontSize: '0.65rem' }}>Grasas</span>
           </div>
         </div>
       </div>
@@ -91,7 +93,7 @@ const Historial = () => {
               </div>
               
               {/* Spaced out macro values using justifyContent: 'space-between' */}
-              <div className="flex text-xs text-muted" style={{ fontSize: '0.75rem', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '0.45rem', marginTop: '0.2rem', justifyContent: 'space-between' }}>
+              <div className="flex text-xs text-muted" style={{ fontSize: '0.75rem', borderTop: '1px solid var(--border-color)', paddingTop: '0.45rem', marginTop: '0.2rem', justifyContent: 'space-between' }}>
                 <span>Prot: <strong style={{ color: 'var(--text-color)' }}>{meal.protein}g</strong></span>
                 <span>Carb: <strong style={{ color: 'var(--text-color)' }}>{meal.carbs}g</strong></span>
                 <span>Grasa: <strong style={{ color: 'var(--text-color)' }}>{meal.fats}g</strong></span>

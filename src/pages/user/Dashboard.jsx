@@ -14,7 +14,7 @@ const CircularProgress = ({ value, max, color, label }) => {
     <div className="flex flex-col items-center gap-1">
       <div style={{ position: 'relative', width: '68px', height: '68px' }}>
         <svg width="68" height="68" style={{ transform: 'rotate(-90deg)' }}>
-          <circle cx="34" cy="34" r={radius} stroke="rgba(255,255,255,0.08)" strokeWidth="4.5" fill="transparent" />
+          <circle cx="34" cy="34" r={radius} stroke="rgba(15, 23, 42, 0.08)" strokeWidth="4.5" fill="transparent" />
           <circle cx="34" cy="34" r={radius} stroke={color} strokeWidth="4.5" fill="transparent"
             strokeDasharray={circumference} strokeDashoffset={strokeDashoffset}
             style={{ transition: 'stroke-dashoffset 0.5s ease-in-out' }}
@@ -30,7 +30,11 @@ const CircularProgress = ({ value, max, color, label }) => {
 };
 
 const Dashboard = () => {
-  const { userData, dailyProgress, isPremium, setIsPremium, menuItems, addConsumption, getAIMatch, defaultRestaurants } = useAppContext();
+  const { 
+    userData, dailyProgress, isPremium, setIsPremium, menuItems, addConsumption, 
+    getAIMatch, defaultRestaurants, showAlert,
+    extraBurnedCalories, syncSmartwatch, routeZones, setRouteZones 
+  } = useAppContext();
   const navigate = useNavigate();
   
   // Drag scroll hooks
@@ -40,14 +44,14 @@ const Dashboard = () => {
   if (!userData) return null;
 
   const { metrics, profile } = userData;
-  const remainingCals = metrics.target - dailyProgress.consumedCalories;
+  const remainingCals = metrics.target + extraBurnedCalories - dailyProgress.consumedCalories;
 
   // Retrieve AI recommendation matching user goal/allergies
   const aiMatch = getAIMatch();
 
   const handleQuickOrder = (meal) => {
     addConsumption(meal);
-    alert(`¡Plato '${meal.name}' ordenado! Comisión de venta del 10% cobrada. Macros registrados.`);
+    showAlert(`¡Plato '${meal.name}' ordenado! Comisión de venta del 10% cobrada. Macros registrados.`);
   };
 
   // Compile other secondary recommended meals
@@ -70,28 +74,27 @@ const Dashboard = () => {
       <div className="flex justify-between items-center glass-panel" style={{ padding: '1.25rem' }}>
         <div>
           <h2 className="text-gradient" style={{ fontSize: '1.2rem', margin: 0 }}>Hola, {profile.name}</h2>
-          <p className="text-xs" style={{ margin: 0 }}>Meta Diaria: {metrics.target} Kcal</p>
+          <p className="text-xs" style={{ margin: 0 }}>
+            Meta Diaria: {metrics.target} {extraBurnedCalories > 0 ? `+ ${extraBurnedCalories} (Activas)` : ''} Kcal
+          </p>
         </div>
-        <div className="flex gap-2">
-          {isPremium ? (
-            <span className="badge btn-premium" style={{ padding: '0.2rem 0.5rem' }}>
-              <Crown size={12} /> Nutri+
-            </span>
-          ) : (
-            <button 
-              className="badge btn-secondary text-xs" 
-              style={{ border: 'none', background: 'rgba(255,255,255,0.05)' }}
-              onClick={() => setIsPremium(true)}
-            >
-              Probar Premium
-            </button>
-          )}
+        <div className="flex flex-col items-end gap-1">
+          <button 
+            className={`badge ${isPremium ? 'btn-premium' : 'btn-secondary text-xs'}`}
+            style={{ border: 'none', cursor: 'pointer', background: isPremium ? '' : 'rgba(15, 23, 42, 0.05)' }}
+            onClick={() => {
+              setIsPremium(!isPremium);
+              showAlert(!isPremium ? "¡Tema Premium Activado! Disfruta de la planificación de ruta, filtros de precisión e integración smartwatch." : "Modo básico activado.");
+            }}
+          >
+            <Crown size={12} /> {isPremium ? 'Nutri+ Activo' : 'Probar Premium'}
+          </button>
         </div>
       </div>
 
       {/* Main Calories Progress Card */}
       <div className="glass-panel text-center relative overflow-hidden" style={{ padding: '1.5rem 1.25rem' }}>
-        <div style={{ position: 'absolute', top: '-50px', right: '-50px', width: '120px', height: '120px', background: 'var(--primary)', filter: 'blur(70px)', opacity: 0.18, borderRadius: '50%' }}></div>
+        <div style={{ position: 'absolute', top: '-50px', right: '-50px', width: '120px', height: '120px', background: 'var(--primary)', filter: 'blur(70px)', opacity: 0.12, borderRadius: '50%' }}></div>
         <h3 className="text-xs mb-1 text-muted" style={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>Calorías Restantes</h3>
         <div className="flex items-center justify-center gap-1">
           <Flame color="var(--warning)" size={24} />
@@ -99,12 +102,37 @@ const Dashboard = () => {
         </div>
         <div className="flex justify-between text-xs text-muted mt-3">
           <span>Consumido: {dailyProgress.consumedCalories} Kcal</span>
-          <span>Meta: {metrics.target} Kcal</span>
+          <span>Meta: {metrics.target + extraBurnedCalories} Kcal</span>
         </div>
-        <div className="w-full mt-2 rounded-full h-1.5" style={{ background: 'rgba(255,255,255,0.08)' }}>
-          <div className="h-1.5 rounded-full" style={{ width: `${Math.min((dailyProgress.consumedCalories / metrics.target) * 100, 100)}%`, background: 'var(--warning)' }}></div>
+        <div class="w-full mt-2 rounded-full h-1.5" style={{ background: 'rgba(15, 23, 42, 0.08)' }}>
+          <div className="h-1.5 rounded-full" style={{ width: `${Math.min((dailyProgress.consumedCalories / (metrics.target + extraBurnedCalories)) * 100, 100)}%`, background: 'var(--warning)' }}></div>
         </div>
       </div>
+
+      {/* Smartwatch Sync - Premium Only */}
+      {isPremium && (
+        <div className="glass-panel" style={{ padding: '1rem 1.25rem', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', border: '1px dashed var(--accent)', background: 'linear-gradient(135deg, rgba(14,165,233,0.05) 0%, transparent 100%)', gap: '0.5rem' }}>
+          <div className="flex flex-col gap-0.5" style={{ flex: 1 }}>
+            <span style={{ fontSize: '0.8rem', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '5px' }}>
+              <span style={{ display: 'inline-block', width: '8px', height: '8px', background: extraBurnedCalories > 0 ? 'var(--success)' : 'var(--accent)', borderRadius: '50%', animation: extraBurnedCalories > 0 ? 'ping 1.5s infinite' : 'none' }}></span>
+              Sincronizar Smartwatch
+            </span>
+            <span className="text-xs text-muted">
+              {extraBurnedCalories > 0 ? 'Activo: +400 kcal registradas' : 'Detectado: Fitbit/Apple Watch'}
+            </span>
+          </div>
+          <button 
+            className={`btn ${extraBurnedCalories > 0 ? 'btn-primary' : 'btn-secondary'}`}
+            style={{ padding: '0.5rem 1rem', fontSize: '0.75rem', background: extraBurnedCalories > 0 ? 'var(--success)' : '', color: extraBurnedCalories > 0 ? '#fff' : '' }}
+            onClick={() => {
+              syncSmartwatch();
+              showAlert(extraBurnedCalories > 0 ? "Smartwatch desconectado. Meta de calorías restablecida." : "¡Smartwatch Sincronizado! Se agregaron +400 kcal de gasto de entrenamiento a tu presupuesto diario de hoy.");
+            }}
+          >
+            {extraBurnedCalories > 0 ? 'Desconectar' : 'Sincronizar'}
+          </button>
+        </div>
+      )}
 
       {/* Macros Circles - FORCE flex-direction row to list them horizontally! */}
       <div className="glass-panel" style={{ flexDirection: 'row', justifyContent: 'space-around', padding: '1rem 0.5rem', gap: '0' }}>
@@ -112,6 +140,83 @@ const Dashboard = () => {
         <CircularProgress value={dailyProgress.consumedCarbs} max={metrics.macros.carbs} color="var(--accent)" label="Carbos" />
         <CircularProgress value={dailyProgress.consumedFats} max={metrics.macros.fats} color="var(--warning)" label="Grasas" />
       </div>
+
+      {/* Route Planner - Premium Only */}
+      {isPremium && (
+        <div className="glass-panel" style={{ padding: '1.25rem', gap: '0.75rem' }}>
+          <h3 style={{ fontSize: '0.95rem', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Map size={16} color="var(--primary)" />
+            Planificación de Ruta (Día Completo)
+          </h3>
+          <p className="text-xs text-muted" style={{ margin: 0, lineHeight: '1.3' }}>
+            Indica dónde estarás hoy y te planificaremos tus comidas ideales en base a la ubicación de los locales.
+          </p>
+          
+          <div className="flex gap-2 mt-1">
+            <div className="flex flex-col flex-1">
+              <label className="text-xs text-muted mb-1" style={{ fontSize: '0.65rem' }}>Zona A (Almuerzo)</label>
+              <select 
+                value={routeZones.zoneA} 
+                onChange={e => setRouteZones({ ...routeZones, zoneA: e.target.value })}
+                style={{ padding: '0.5rem 0.65rem', fontSize: '0.75rem', borderRadius: '0.5rem' }}
+              >
+                <option value="">-- Seleccionar --</option>
+                <option value="San Isidro">San Isidro</option>
+                <option value="Miraflores">Miraflores</option>
+                <option value="Surco">Surco</option>
+              </select>
+            </div>
+            <div className="flex flex-col flex-1">
+              <label className="text-xs text-muted mb-1" style={{ fontSize: '0.65rem' }}>Zona B (Cena)</label>
+              <select 
+                value={routeZones.zoneB} 
+                onChange={e => setRouteZones({ ...routeZones, zoneB: e.target.value })}
+                style={{ padding: '0.5rem 0.65rem', fontSize: '0.75rem', borderRadius: '0.5rem' }}
+              >
+                <option value="">-- Seleccionar --</option>
+                <option value="San Isidro">San Isidro</option>
+                <option value="Miraflores">Miraflores</option>
+                <option value="Surco">Surco</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Planned Recommendations Results */}
+          {(routeZones.zoneA || routeZones.zoneB) && (
+            <div className="flex flex-col gap-2 mt-2" style={{ padding: '0.75rem', background: 'rgba(16,185,129,0.03)', border: '1px dashed var(--border-color)', borderRadius: '0.75rem' }}>
+              <span className="text-xs" style={{ fontWeight: '700', color: 'var(--primary)' }}>Rutas sugeridas:</span>
+              
+              {routeZones.zoneA && (
+                <div className="flex justify-between items-start text-xs">
+                  <div>
+                    <span style={{ fontWeight: '600' }}>🥗 Almuerzo en {routeZones.zoneA}:</span>
+                    <p className="text-muted" style={{ margin: 0, fontSize: '0.65rem' }}>
+                      {routeZones.zoneA === 'San Isidro' ? 'Green Corner - Ensalada Garbanzo (11.00 USD • 450 kcal)' : 
+                       routeZones.zoneA === 'Miraflores' ? 'El Horno de la Estancia - Pechuga Rústica (14.50 USD • 480 kcal)' : 
+                       'Sweet Bakery - Muffin Chocolate (5.50 USD • 210 kcal)'}
+                    </p>
+                  </div>
+                  <span className="text-muted" style={{ fontSize: '0.65rem', whiteSpace: 'nowrap' }}>A 3 min</span>
+                </div>
+              )}
+
+              {routeZones.zoneB && (
+                <div className="flex justify-between items-start text-xs" style={{ borderTop: '1px solid var(--border-color)', paddingTop: '0.4rem', marginTop: '0.2rem' }}>
+                  <div>
+                    <span style={{ fontWeight: '600' }}>🥩 Cena en {routeZones.zoneB}:</span>
+                    <p className="text-muted" style={{ margin: 0, fontSize: '0.65rem' }}>
+                      {routeZones.zoneB === 'Miraflores' ? 'La Leña y Carbón - Bife Angosto (19.50 USD • 490 kcal)' : 
+                       routeZones.zoneB === 'San Isidro' ? 'Trattoria Bella Italia - Pasta Pesto (13.50 USD • 540 kcal)' : 
+                       'Pasta Lab - Spaghetti de Calabacín (11.50 USD • 290 kcal)'}
+                    </p>
+                  </div>
+                  <span className="text-muted" style={{ fontSize: '0.65rem', whiteSpace: 'nowrap' }}>A 5 min</span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* 1. TOP: Platos Patrocinados / Promocionados */}
       <div>
@@ -137,7 +242,7 @@ const Dashboard = () => {
                 <span style={{ fontSize: '0.8rem', fontWeight: 'bold' }}>${item.price.toFixed(2)}</span>
               </div>
               <h4 style={{ fontSize: '0.8rem', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.name}</h4>
-              <p className="text-xs text-muted">FitBowl (Tu Local)</p>
+              <p className="text-xs text-muted">FitBowl</p>
               <div className="flex justify-between text-xs mt-1" style={{ fontSize: '0.65rem' }}>
                 <span>{item.calories} kcal</span>
                 <span>P: {item.protein}g | C: {item.carbs}g</span>
@@ -170,7 +275,7 @@ const Dashboard = () => {
             <p className="text-xs text-muted">{aiMatch.meal.restaurant} • S/. {aiMatch.meal.price.toFixed(2)}</p>
           </div>
 
-          <p className="text-xs text-muted" style={{ lineHeight: '1.4', background: 'rgba(255,255,255,0.03)', padding: '0.65rem', borderRadius: '0.5rem' }}>
+          <p className="text-xs text-muted" style={{ lineHeight: '1.4', background: 'rgba(15, 23, 42, 0.03)', padding: '0.65rem', borderRadius: '0.5rem' }}>
             {aiMatch.reason}
           </p>
 
@@ -203,12 +308,12 @@ const Dashboard = () => {
             <div 
               key={index} 
               className="glass-panel" 
-              style={{ minWidth: '180px', maxWidth: '180px', padding: '0.85rem', gap: '0.35rem', background: 'rgba(30,41,59,0.5)' }}
+              style={{ minWidth: '180px', maxWidth: '180px', padding: '0.85rem', gap: '0.35rem', background: 'var(--surface)', border: '1px solid var(--border-color)' }}
             >
               <h4 style={{ fontSize: '0.8rem', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{meal.name}</h4>
               <p className="text-xs text-muted" style={{ fontSize: '0.7rem' }}>{meal.restaurant}</p>
               <div className="flex justify-between items-center mt-1">
-                <span className="badge" style={{ background: 'rgba(255,255,255,0.06)', padding: '0.15rem 0.35rem', fontSize: '0.65rem' }}>{meal.calories} kcal</span>
+                <span className="badge" style={{ background: 'rgba(15, 23, 42, 0.05)', padding: '0.15rem 0.35rem', fontSize: '0.65rem' }}>{meal.calories} kcal</span>
                 <span style={{ fontSize: '0.8rem', fontWeight: 'bold' }}>S/. {meal.price.toFixed(2)}</span>
               </div>
               <button 

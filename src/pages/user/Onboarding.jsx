@@ -40,7 +40,8 @@ const Onboarding = () => {
       Number(formData.weight),
       Number(formData.height),
       formData.activityLevel,
-      formData.goal
+      formData.goal,
+      formData
     );
 
     setUserData({

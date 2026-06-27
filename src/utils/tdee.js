@@ -1,8 +1,5 @@
-export const calculateTDEE = (gender, age, weight, height, activityLevel, goal) => {
+export const calculateTDEE = (gender, age, weight, height, activityLevel, goal, extraFields = {}) => {
   // Harris-Benedict BMR Formula
-  // Men: BMR = 88.362 + (13.397 x weight in kg) + (4.799 x height in cm) - (5.677 x age in years)
-  // Women: BMR = 447.593 + (9.247 x weight in kg) + (3.098 x height in cm) - (4.330 x age in years)
-
   let bmr;
   if (gender === "male") {
     bmr = 88.362 + (13.397 * weight) + (4.799 * height) - (5.677 * age);
@@ -12,11 +9,11 @@ export const calculateTDEE = (gender, age, weight, height, activityLevel, goal) 
 
   // Activity Multipliers
   const activityMultipliers = {
-    sedentary: 1.2, // Little or no exercise
-    light: 1.375, // Light exercise/sports 1-3 days/week
-    moderate: 1.55, // Moderate exercise/sports 3-5 days/week
-    active: 1.725, // Hard exercise/sports 6-7 days a week
-    very_active: 1.9, // Very hard exercise/sports & physical job
+    sedentary: 1.2,
+    light: 1.375,
+    moderate: 1.55,
+    active: 1.725,
+    very_active: 1.9,
   };
 
   const multiplier = activityMultipliers[activityLevel] || 1.2;
@@ -26,22 +23,40 @@ export const calculateTDEE = (gender, age, weight, height, activityLevel, goal) 
   let targetCalories = maintenanceCalories;
   
   if (goal === "lose") {
-    targetCalories -= 500; // 500 kcal deficit
+    targetCalories = Math.round(maintenanceCalories * 0.80); // TDEE - 20%
   } else if (goal === "gain") {
-    targetCalories += 300; // 300 kcal surplus
+    targetCalories = Math.round(maintenanceCalories * 1.15); // TDEE + 15%
+  } else if (goal === "recomp" || goal === "maintain" || goal === "health" || goal === "diet") {
+    targetCalories = maintenanceCalories;
   }
 
-  // STRICT RULE: No starvation diets. Minimum 1500 kcal for men, 1200 kcal for women (general safe baseline, but we'll enforce 1500 as safe for MVP)
+  // Minimum calories safeguards
   const MIN_CALORIES = gender === "male" ? 1500 : 1200;
   if (targetCalories < MIN_CALORIES) {
     targetCalories = MIN_CALORIES;
   }
 
-  // Macro calculation (simplified balanced approach: 30% Protein, 40% Carbs, 30% Fat)
-  // Protein: 4 kcal/g, Carbs: 4 kcal/g, Fat: 9 kcal/g
-  const protein = Math.round((targetCalories * 0.3) / 4);
-  const carbs = Math.round((targetCalories * 0.4) / 4);
-  const fats = Math.round((targetCalories * 0.3) / 9);
+  // Macro calculation
+  let protein, carbs, fats;
+
+  // Check if Keto is selected in restrictions (Keto diet)
+  const isKeto = goal === "diet" && extraFields.dietType === "keto";
+
+  if (isKeto) {
+    carbs = 30; // Max 30g carbs
+    protein = Math.round((targetCalories * 0.25) / 4); // 25% protein
+    fats = Math.max(10, Math.round((targetCalories - (protein * 4) - (carbs * 4)) / 9)); // Rest is fats
+  } else if (goal === "recomp") {
+    protein = Math.round(2.2 * weight); // 2.2g per kg
+    const remainingCals = targetCalories - (protein * 4);
+    carbs = Math.max(10, Math.round((remainingCals * 0.55) / 4));
+    fats = Math.max(10, Math.round((remainingCals * 0.45) / 9));
+  } else {
+    // Standard balanced approach (30% Protein, 40% Carbs, 30% Fat)
+    protein = Math.round((targetCalories * 0.3) / 4);
+    carbs = Math.round((targetCalories * 0.4) / 4);
+    fats = Math.round((targetCalories * 0.3) / 9);
+  }
 
   return {
     maintenance: maintenanceCalories,

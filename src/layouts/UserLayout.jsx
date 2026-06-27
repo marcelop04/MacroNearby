@@ -6,7 +6,7 @@ import { Home, MapPin, Calendar, Users, User, LogOut, Wifi, Battery } from 'luci
 const UserLayout = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { logout } = useAppContext();
+  const { logout, customAlert, closeAlert } = useAppContext();
 
   // Get current active tab from pathname
   const currentPath = location.pathname;
@@ -82,6 +82,18 @@ const UserLayout = ({ children }) => {
           <span>Salir</span>
         </button>
       </div>
+
+      {customAlert && (
+        <div className="modal-overlay" style={{ zIndex: 100, alignItems: 'center', padding: '2rem' }}>
+          <div className="modal-content text-center" style={{ padding: '1.5rem', borderRadius: '1.25rem', animation: 'scaleUp 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)' }}>
+            <h4 className="text-gradient mb-2" style={{ fontSize: '1.15rem' }}>Nutrinearby</h4>
+            <p className="text-sm text-muted mb-4" style={{ lineHeight: '1.4' }}>{customAlert}</p>
+            <button className="btn btn-primary w-full" style={{ padding: '0.65rem', fontSize: '0.9rem' }} onClick={closeAlert}>
+              Aceptar
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

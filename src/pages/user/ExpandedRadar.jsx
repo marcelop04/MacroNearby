@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import { useAppContext } from '../../context/AppContext';
 import { useDragScroll } from '../../hooks/useDragScroll';
-import { Star, ShoppingBag, Lock, Sparkles, MapPin, Compass } from 'lucide-react';
+import { Star, ShoppingBag, Lock, Sparkles, MapPin, Compass, Crown } from 'lucide-react';
 
 const ExpandedRadar = () => {
-  const { isPremium, addConsumption, menuItems, businessLocation, defaultRestaurants, getAIMatch } = useAppContext();
+  const { 
+    isPremium, addConsumption, menuItems, businessLocation, defaultRestaurants, 
+    getAIMatch, showAlert, hasBusinessSubscription, flashDiscountActive 
+  } = useAppContext();
   const [selectedFilter, setSelectedFilter] = useState('Todos');
   const [selectedRest, setSelectedRest] = useState(null);
 
@@ -17,7 +20,10 @@ const ExpandedRadar = () => {
   const filterDrag = useDragScroll();
   const listDrag = useDragScroll();
 
-  const filters = ['Todos', 'Saludable', 'Vegano', 'Carnes', 'Italiana', 'Criolla'];
+  const filters = [
+    'Todos', 'Saludable', 'Vegano', 'Carnes', 'Italiana', 'Criolla', 'Chifa',
+    ...(isPremium ? ['Alto Proteína', 'Bajo Sodio', 'Sin Azúcar', 'Sin Gluten'] : [])
+  ];
 
   const userB2B = {
     id: 1,
@@ -32,28 +38,59 @@ const ExpandedRadar = () => {
   const allRestaurants = [userB2B, ...defaultRestaurants];
   const aiMatch = getAIMatch();
 
-  const filteredRestaurants = allRestaurants.filter(r => {
-    if (selectedFilter === 'Todos') return true;
-    return r.type === selectedFilter;
+  // Filter restaurants AND meals inside them based on selected filter
+  const filteredRestaurantsData = allRestaurants.map(r => {
+    let matchingMeals = r.meals;
+
+    // Apply Precision Filters if selected (Premium only)
+    if (selectedFilter === 'Alto Proteína') {
+      matchingMeals = matchingMeals.filter(m => m.protein >= 30);
+    } else if (selectedFilter === 'Bajo Sodio') {
+      matchingMeals = matchingMeals.filter(m => m.isLowSodium);
+    } else if (selectedFilter === 'Sin Azúcar') {
+      matchingMeals = matchingMeals.filter(m => m.isZeroSugar);
+    } else if (selectedFilter === 'Sin Gluten') {
+      matchingMeals = matchingMeals.filter(m => m.isGlutenFree);
+    } else if (selectedFilter !== 'Todos') {
+      // Basic type filter
+      if (r.type !== selectedFilter) {
+        matchingMeals = [];
+      }
+    }
+
+    return {
+      ...r,
+      meals: matchingMeals
+    };
+  }).filter(r => r.meals.length > 0);
+
+  // Boost Premium Business (FitBowl id=1) to the very top if it meets filter criteria
+  const filteredRestaurants = [...filteredRestaurantsData].sort((a, b) => {
+    const aBoost = a.id === 1 && hasBusinessSubscription;
+    const bBoost = b.id === 1 && hasBusinessSubscription;
+    if (aBoost && !bBoost) return -1;
+    if (!aBoost && bBoost) return 1;
+    return 0;
   });
 
   const handleOrder = (meal) => {
     addConsumption(meal);
-    alert(`¡Pedido realizado! Comisión del 10% cobrada. Has pagado S/ ${meal.price.toFixed(2)} por la app. Macros agregados!`);
+    showAlert(`¡Pedido realizado! Comisión del 10% cobrada. Has pagado S/ ${meal.price.toFixed(2)} por la app. Macros agregados!`);
     setSelectedRest(null);
   };
 
   const handlePremiumFilter = () => {
     if (isPremium) {
-      alert("Filtro inteligente activado: Mostrando opciones premium bajas en grasas.");
+      showAlert("Filtro inteligente activado: Mostrando opciones premium bajas en grasas.");
       setSelectedFilter('Saludable');
     } else {
-      alert("Filtros avanzados requieren Nutri+ Premium. Actívalo en el Dashboard.");
+      showAlert("Filtros avanzados requieren Nutri+ Premium. Actívalo en el Dashboard.");
     }
   };
 
   const handleMouseDown = (e) => {
     if (e.target.tagName === 'BUTTON' || e.target.closest('button')) return;
+    if (e.target.closest('.horizontal-slider')) return;
     setIsPanning(true);
     setPanStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
   };
@@ -83,7 +120,7 @@ const ExpandedRadar = () => {
           flex: 1, 
           position: 'relative', 
           overflow: 'hidden', 
-          background: '#070a13', 
+          background: '#f1f5f9', 
           display: 'flex', 
           flexDirection: 'column',
           cursor: isPanning ? 'grabbing' : 'grab'
@@ -92,13 +129,12 @@ const ExpandedRadar = () => {
         
         {/* Panning Wrapper container */}
         <div style={{ transform: `translate(${pan.x}px, ${pan.y}px)`, width: '100%', height: '100%', position: 'absolute', transition: isPanning ? 'none' : 'transform 0.1s ease-out' }}>
-          
-          {/* Grid Background Mock */}
-          <div style={{ position: 'absolute', inset: -500, opacity: 0.12, backgroundImage: 'linear-gradient(rgba(139, 92, 246, 0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(139, 92, 246, 0.15) 1px, transparent 1px)', backgroundSize: '24px 24px' }}></div>
+                  {/* Grid Background Mock */}
+          <div style={{ position: 'absolute', inset: -500, opacity: 0.8, backgroundImage: 'linear-gradient(rgba(16, 185, 129, 0.08) 1.5px, transparent 1.5px), linear-gradient(90deg, rgba(16, 185, 129, 0.08) 1.5px, transparent 1.5px)', backgroundSize: '28px 28px' }}></div>
           
           {/* Radar Circles */}
-          <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '220px', height: '220px', border: '1.5px dashed rgba(139, 92, 246, 0.15)', borderRadius: '50%', pointerEvents: 'none' }}></div>
-          <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '420px', height: '420px', border: '1px solid rgba(139, 92, 246, 0.06)', borderRadius: '50%', pointerEvents: 'none' }}></div>
+          <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '220px', height: '220px', border: '1.5px dashed rgba(16, 185, 129, 0.2)', borderRadius: '50%', pointerEvents: 'none' }}></div>
+          <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '420px', height: '420px', border: '1px solid rgba(16, 185, 129, 0.08)', borderRadius: '50%', pointerEvents: 'none' }}></div>
 
           {/* User Marker Dot */}
           <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '16px', height: '16px', background: 'var(--accent)', borderRadius: '50%', boxShadow: '0 0 15px var(--accent)', zIndex: 5 }}>
@@ -108,6 +144,7 @@ const ExpandedRadar = () => {
           {/* Restaurant Pins */}
           {filteredRestaurants.map((rest) => {
             const isSelected = selectedRest?.id === rest.id;
+            const isBoosted = rest.id === 1 && hasBusinessSubscription;
             return (
               <button
                 key={rest.id}
@@ -117,34 +154,35 @@ const ExpandedRadar = () => {
                   left: rest.position.x,
                   top: rest.position.y,
                   transform: 'translate(-50%, -50%)',
-                  background: rest.ad 
-                    ? 'linear-gradient(135deg, #fbbf24, #f59e0b)' 
-                    : isSelected ? 'var(--secondary)' : 'var(--primary)',
-                  border: '2px solid white',
+                  background: isBoosted 
+                    ? 'linear-gradient(135deg, #fbbf24, #d97706)' 
+                    : rest.ad 
+                      ? 'linear-gradient(135deg, #fbbf24, #f59e0b)' 
+                      : isSelected ? 'var(--secondary)' : 'var(--primary)',
+                  border: isBoosted ? '3px solid #fff' : '2px solid white',
                   borderRadius: '50%',
-                  width: '32px',
-                  height: '32px',
+                  width: isBoosted ? '38px' : '32px',
+                  height: isBoosted ? '38px' : '32px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  boxShadow: '0 4px 10px rgba(0,0,0,0.5)',
-                  zIndex: 6,
+                  boxShadow: isBoosted ? '0 0 15px rgba(245, 158, 11, 0.6)' : '0 4px 10px rgba(0,0,0,0.5)',
+                  zIndex: isBoosted ? 8 : isSelected ? 7 : 6,
                   cursor: 'pointer'
                 }}
               >
-                <MapPin size={16} color={rest.ad ? '#000' : '#fff'} />
+                {isBoosted ? <Crown size={16} color="#fff" /> : <MapPin size={16} color={rest.ad ? '#000' : '#fff'} />}
               </button>
             );
           })}
         </div>
 
         {/* Map Header Floating Overlay - Placed at the top */}
-        <div className="glass-panel" style={{ position: 'absolute', top: '0.5rem', left: '0.75rem', right: '0.75rem', zIndex: 10, padding: '0.65rem 0.85rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(15, 23, 42, 0.8)' }}>
+        <div className="glass-panel" style={{ position: 'absolute', top: '0.5rem', left: '0.75rem', right: '0.75rem', zIndex: 10, padding: '0.65rem 0.85rem', display: 'flex', justifyContent: 'flex-start', alignItems: 'center' }}>
           <div className="flex items-center gap-2">
             <Compass size={18} className="text-gradient" />
             <h3 style={{ margin: 0, fontSize: '0.9rem' }}>Radar Nutricional</h3>
           </div>
-          <span className="badge badge-ad" style={{ padding: '0.15rem 0.4rem', fontSize: '0.65rem' }}>Arrastra el mapa</span>
         </div>
 
         {/* Cravings Filters - MOVED TO THE TOP (below map header) to avoid overlapping the cards completely */}
@@ -155,7 +193,7 @@ const ExpandedRadar = () => {
           style={{ 
             ...filterDrag.props.style, 
             position: 'absolute', 
-            top: '4.25rem', // Placed at the top area, below map header
+            top: '5.0rem', // Placed at the top area, below map header with more breathing space
             left: '0.75rem', 
             right: '0.75rem', 
             zIndex: 15, 
@@ -165,19 +203,52 @@ const ExpandedRadar = () => {
             padding: '0.2rem 0' 
           }}
         >
-          {filters.map(f => (
-            <button 
-              key={f} 
-              className={`badge ${selectedFilter === f ? 'btn-primary' : 'glass-panel'}`} 
-              style={{ padding: '0.45rem 0.85rem', whiteSpace: 'nowrap', border: selectedFilter === f ? 'none' : '1px solid var(--border-color)', fontSize: '0.75rem', background: selectedFilter === f ? '' : 'rgba(15,23,42,0.95)' }} 
-              onClick={() => setSelectedFilter(f)}
-            >
-              {f}
-            </button>
-          ))}
+          {filters.map(f => {
+            const isSelected = selectedFilter === f;
+            return (
+              <button 
+                key={f} 
+                className="badge" 
+                style={{ 
+                  padding: '0.45rem 0.85rem', 
+                  whiteSpace: 'nowrap', 
+                  fontSize: isSelected ? '0.78rem' : '0.7rem', 
+                  fontWeight: isSelected ? '700' : '600',
+                  color: isSelected ? '#ffffff' : 'var(--text-color)',
+                  background: isSelected ? 'var(--primary)' : 'var(--surface)', 
+                  border: isSelected ? '1px solid var(--primary)' : '1px solid var(--border-color)', 
+                  borderRadius: '9999px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transform: isSelected ? 'scale(1.06)' : 'scale(1)',
+                  boxShadow: isSelected ? '0 4px 10px rgba(16, 185, 129, 0.25)' : 'none',
+                  transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                  cursor: 'pointer'
+                }} 
+                onClick={() => setSelectedFilter(f)}
+              >
+                {f}
+              </button>
+            );
+          })}
           <button 
-            className="badge glass-panel flex items-center gap-1 text-xs" 
-            style={{ whiteSpace: 'nowrap', color: '#fbbf24', border: '1px solid rgba(251, 191, 36, 0.4)', padding: '0.45rem 0.85rem', background: 'rgba(15,23,42,0.95)' }}
+            className="badge" 
+            style={{ 
+              whiteSpace: 'nowrap', 
+              color: '#fbbf24', 
+              border: '1px solid rgba(251, 191, 36, 0.4)', 
+              padding: '0.45rem 0.85rem', 
+              background: 'var(--surface)',
+              borderRadius: '9999px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '0.7rem',
+              fontWeight: '600',
+              transition: 'all 0.2s ease',
+              cursor: 'pointer'
+            }}
             onClick={handlePremiumFilter}
           >
             {isPremium ? <Sparkles size={10} /> : <Lock size={10} />} Macros Exactos
@@ -204,6 +275,7 @@ const ExpandedRadar = () => {
         >
           {filteredRestaurants.map((rest) => {
             const hasAiMatch = aiMatch && rest.meals.some(m => m.name === aiMatch.meal.name);
+            const isBoosted = rest.id === 1 && hasBusinessSubscription;
             return (
               <div 
                 key={rest.id} 
@@ -213,17 +285,22 @@ const ExpandedRadar = () => {
                   maxWidth: '220px',
                   padding: '0.85rem', 
                   cursor: 'pointer', 
-                  background: 'rgba(15, 23, 42, 0.95)', 
-                  border: hasAiMatch ? '2px solid var(--accent)' : '1px solid rgba(255,255,255,0.08)' 
+                  background: 'var(--surface)', 
+                  border: isBoosted ? '2px solid #fbbf24' : hasAiMatch ? '2px solid var(--accent)' : '1px solid var(--border-color)' 
                 }} 
                 onClick={() => setSelectedRest(rest)}
               >
                 <div className="flex justify-between items-start">
-                  {rest.ad ? (
+                  {isBoosted ? (
+                    <span className="badge btn-premium mb-1" style={{ fontSize: '0.65rem', padding: '0.15rem 0.35rem' }}>★ Socio Premium</span>
+                  ) : rest.ad ? (
                     <span className="badge badge-ad mb-1" style={{ fontSize: '0.65rem', padding: '0.15rem 0.35rem' }}>Patrocinado</span>
                   ) : hasAiMatch ? (
                     <span className="badge btn-primary mb-1" style={{ fontSize: '0.65rem', padding: '0.15rem 0.35rem', background: 'var(--accent)' }}>Recomendado AI</span>
                   ) : <div style={{ height: '15px' }}></div>}
+                  {rest.id === 1 && flashDiscountActive && (
+                    <span className="badge btn-primary mb-1 text-xs" style={{ background: 'var(--secondary)', color: 'white', fontSize: '0.6rem', padding: '0.1rem 0.3rem' }}>20% OFF</span>
+                  )}
                 </div>
                 <h4 style={{ fontSize: '0.85rem', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{rest.name}</h4>
                 <p className="text-xs text-muted mb-1">{rest.type} • {rest.distance}</p>
@@ -250,12 +327,13 @@ const ExpandedRadar = () => {
             <div style={{ maxHeight: '250px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.75rem', paddingRight: '2px' }}>
               {selectedRest.meals.map((meal, index) => {
                 const isAiRecommended = aiMatch && aiMatch.meal.name === meal.name;
+                const isFitBowlPromo = selectedRest.id === 1 && flashDiscountActive;
                 return (
                   <div 
                     key={index} 
                     className="glass-panel" 
                     style={{ 
-                      background: 'rgba(139, 92, 246, 0.04)', 
+                      background: 'var(--bg-color)', 
                       borderColor: isAiRecommended ? 'var(--accent)' : 'var(--border-color)', 
                       padding: '1rem', 
                       gap: '0.4rem',
@@ -277,6 +355,11 @@ const ExpandedRadar = () => {
                     >
                       <ShoppingBag size={14} />
                       Pedir por la App (${meal.price.toFixed(2)})
+                      {isFitBowlPromo && (
+                        <span style={{ textDecoration: 'line-through', opacity: 0.6, fontSize: '0.75rem', marginLeft: '6px' }}>
+                          ${(meal.price / 0.8).toFixed(2)}
+                        </span>
+                      )}
                     </button>
                   </div>
                 );

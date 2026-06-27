@@ -4,7 +4,7 @@ import { useAppContext } from '../../context/AppContext';
 import { ArrowLeft, Plus, Trash2, Check } from 'lucide-react';
 
 const MenuManagement = () => {
-  const { menuItems, addMenuItem, deleteMenuItem } = useAppContext();
+  const { rawMenuItems: menuItems, addMenuItem, deleteMenuItem, showAlert } = useAppContext();
   const navigate = useNavigate();
   const [isAdding, setIsAdding] = useState(false);
   
@@ -29,14 +29,14 @@ const MenuManagement = () => {
     });
     setIsAdding(false);
     setFormData({ name: '', price: '', calories: '', protein: '', carbs: '', fats: '' });
-    alert("¡Plato guardado con éxito! Ahora los clientes podrán verlo en su radar y Dashboard de inmediato.");
+    showAlert("¡Plato guardado con éxito! Ahora los clientes podrán verlo en su radar y Dashboard de inmediato.");
   };
 
   return (
     <div className="flex flex-col gap-4" style={{ paddingTop: '0.5rem' }}>
       
       <div className="flex items-center gap-3 glass-panel" style={{ padding: '1rem' }}>
-        <button onClick={() => navigate('/business')} style={{ background: 'transparent', color: 'white', display: 'flex', alignItems: 'center' }}>
+        <button onClick={() => navigate('/business')} style={{ background: 'transparent', color: 'var(--text-color)', display: 'flex', alignItems: 'center' }}>
           <ArrowLeft size={20} />
         </button>
         <h3 className="m-0" style={{ fontSize: '1.05rem' }}>Gestionar Menú</h3>

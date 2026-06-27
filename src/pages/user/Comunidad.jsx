@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Heart, MessageCircle, Share2, Plus, Smile } from 'lucide-react';
+import { useAppContext } from '../../context/AppContext';
 
 const mockPosts = [
   {
@@ -25,6 +26,7 @@ const mockPosts = [
 ];
 
 const Comunidad = () => {
+  const { showAlert } = useAppContext();
   const [posts, setPosts] = useState(mockPosts);
   const [newPostText, setNewPostText] = useState('');
 
@@ -64,6 +66,31 @@ const Comunidad = () => {
     <div className="flex flex-col gap-4" style={{ paddingTop: '1rem' }}>
       <h2>Comunidad Saludable</h2>
       
+      {/* Social Join Badges (Simulated) */}
+      <div className="flex gap-2" style={{ overflowX: 'auto', paddingBottom: '0.25rem', marginTop: '-0.25rem' }}>
+        <button 
+          className="badge" 
+          style={{ background: '#7289da', color: 'white', padding: '0.45rem 0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}
+          onClick={() => showAlert("Simulación: Abriendo el servidor oficial de Discord de MacroNearby...")}
+        >
+          <span style={{ fontSize: '0.85rem' }}>💬</span> Discord
+        </button>
+        <button 
+          className="badge" 
+          style={{ background: '#ff4500', color: 'white', padding: '0.45rem 0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}
+          onClick={() => showAlert("Simulación: Abriendo el subreddit oficial r/MacroNearby...")}
+        >
+          <span style={{ fontSize: '0.85rem' }}>👽</span> Reddit
+        </button>
+        <button 
+          className="badge" 
+          style={{ background: '#3b5998', color: 'white', padding: '0.45rem 0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}
+          onClick={() => showAlert("Simulación: Redirigiendo al grupo de Facebook de MacroNearby...")}
+        >
+          <span style={{ fontSize: '0.85rem' }}>👥</span> Facebook
+        </button>
+      </div>
+      
       {/* Create Post Form */}
       <form onSubmit={handleAddPost} className="glass-panel flex flex-col gap-3">
         <textarea
@@ -71,7 +98,7 @@ const Comunidad = () => {
           value={newPostText}
           onChange={e => setNewPostText(e.target.value)}
           rows="2"
-          style={{ resize: 'none', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}
+          style={{ resize: 'none' }}
         />
         <div className="flex justify-between items-center">
           <Smile size={20} className="text-muted" style={{ cursor: 'pointer' }} />
@@ -91,15 +118,15 @@ const Comunidad = () => {
                 alt={post.user} 
                 style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', border: '1px solid var(--border-color)' }} 
               />
-              <div>
+              <div className="flex flex-col gap-0.5">
                 <h4 style={{ margin: 0, fontSize: '0.95rem' }}>{post.user}</h4>
-                <span className="text-xs text-muted">{post.time}</span>
+                <span className="text-xs text-muted" style={{ fontSize: '0.7rem' }}>{post.time}</span>
               </div>
             </div>
 
             <p style={{ fontSize: '0.9rem', lineHeight: '1.4' }}>{post.content}</p>
 
-            <div className="flex gap-6 mt-2 pt-2" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+            <div className="flex gap-6 mt-2 pt-2" style={{ borderTop: '1px solid var(--border-color)' }}>
               <button 
                 className="flex items-center gap-1 text-sm" 
                 style={{ background: 'transparent', color: post.liked ? 'var(--secondary)' : 'var(--text-muted)' }}
