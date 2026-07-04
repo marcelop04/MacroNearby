@@ -43,11 +43,12 @@ const BusinessSubscriptionModal = ({ onClose }) => {
 
 const BusinessDashboard = () => {
   const { 
-    hasBusinessSubscription, setHasBusinessSubscription, menuItems, businessLocation, 
+    hasBusinessSubscription, setHasBusinessSubscription, menuItems, updateMenuItem, businessLocation, 
     setBusinessLocation, flashDiscountActive, toggleFlashDiscount, showAlert 
   } = useAppContext();
   const navigate = useNavigate();
   const [showSubModal, setShowSubModal] = useState(false);
+  const [discountModal, setDiscountModal] = useState(null);
   const mapRef = useRef(null);
 
   const handleMapClick = (e) => {
@@ -288,6 +289,47 @@ const BusinessDashboard = () => {
         )}
       </div>
 
+      {hasBusinessSubscription && (
+        <div className="glass-panel" style={{ padding: '1rem 1.25rem', gap: '0.75rem' }}>
+          <div className="flex justify-between items-center">
+            <h3 style={{ fontSize: '0.95rem', margin: 0 }}>Promocionar platos para patrocinados</h3>
+            <span className="badge btn-premium" style={{ fontSize: '0.65rem' }}>Pro</span>
+          </div>
+          <p className="text-xs text-muted" style={{ margin: 0, lineHeight: '1.3' }}>
+            Marca platos para que aparezcan primero entre los platos patrocinados del dashboard de clientes. El descuento es una acción distinta y se gestiona por separado.
+          </p>
+          <div className="flex flex-col gap-2">
+            {menuItems.map(item => (
+              <div key={item.id} className="flex justify-between items-center gap-2" style={{ padding: '0.55rem 0.7rem', border: '1px solid var(--border-color)', borderRadius: '0.7rem' }}>
+                <div>
+                  <div style={{ fontSize: '0.8rem', fontWeight: '600' }}>{item.name}</div>
+                  <div className="text-xs text-muted">${item.price.toFixed(2)}</div>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    className={`btn ${item.isPromoted ? 'btn-premium' : 'btn-secondary'}`}
+                    style={{ padding: '0.35rem 0.6rem', fontSize: '0.72rem' }}
+                    onClick={() => {
+                      updateMenuItem(item.id, { isPromoted: !item.isPromoted });
+                      showAlert(item.isPromoted ? 'Plato dejado de patrocinar.' : 'Plato patrocinado para aparecer primero en el dashboard.');
+                    }}
+                  >
+                    {item.isPromoted ? 'Quitar patrocinio' : 'Patrocinar plato'}
+                  </button>
+                  <button
+                    className="btn btn-secondary"
+                    style={{ padding: '0.35rem 0.6rem', fontSize: '0.72rem' }}
+                    onClick={() => setDiscountModal({ item, percent: item.discountPercent ?? 0 })}
+                  >
+                    {item.discountPercent > 0 ? 'Editar descuento' : 'Aplicar descuento'}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Menu Actions */}
       <button 
         className="btn btn-primary w-full"
@@ -296,6 +338,73 @@ const BusinessDashboard = () => {
         <Plus size={18} />
         Gestionar Platos y Precios ({menuItems.length})
       </button>
+
+      {discountModal && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ padding: '1rem' }}>
+            <h3 style={{ fontSize: '1rem', margin: '0 0 0.25rem' }}>Descuento para {discountModal.item.name}</h3>
+            <p className="text-xs text-muted" style={{ margin: '0 0 0.75rem', lineHeight: 1.4 }}>
+              Elige el porcentaje que deseas aplicar y revisa el cambio de precio.
+            </p>
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center gap-2">
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  step="1"
+                  value={discountModal.percent}
+                  onChange={(e) => setDiscountModal(prev => prev ? { ...prev, percent: Number(e.target.value) } : prev)}
+                  style={{ flex: 1 }}
+                />
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={discountModal.percent}
+                  onChange={(e) => setDiscountModal(prev => prev ? { ...prev, percent: Number(e.target.value) } : prev)}
+                  style={{ width: '70px', padding: '0.5rem', fontSize: '0.85rem' }}
+                />
+                <span className="text-xs text-muted">%</span>
+              </div>
+              <div style={{ background: 'rgba(15,23,42,0.04)', borderRadius: '0.75rem', padding: '0.75rem' }}>
+                <div className="flex justify-between text-xs text-muted">
+                  <span>Precio original</span>
+                  <span>${discountModal.item.price.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-xs text-muted mt-1">
+                  <span>Descuento</span>
+                  <span>-${(discountModal.item.price * (discountModal.percent / 100)).toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-sm font-semibold mt-2">
+                  <span>Precio final</span>
+                  <span>${(discountModal.item.price * (1 - discountModal.percent / 100)).toFixed(2)}</span>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  className="btn btn-primary flex-1"
+                  style={{ padding: '0.65rem' }}
+                  onClick={() => {
+                    const percent = Math.max(0, Math.min(100, Number(discountModal.percent) || 0));
+                    updateMenuItem(discountModal.item.id, {
+                      isPromoted: percent > 0,
+                      discountPercent: percent
+                    });
+                    showAlert(percent > 0 ? `Descuento del ${percent}% aplicado a ${discountModal.item.name}.` : `Descuento quitado de ${discountModal.item.name}.`);
+                    setDiscountModal(null);
+                  }}
+                >
+                  Aplicar
+                </button>
+                <button className="btn btn-secondary flex-1" style={{ padding: '0.65rem' }} onClick={() => setDiscountModal(null)}>
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showSubModal && <BusinessSubscriptionModal onClose={() => setShowSubModal(false)} />}
     </div>

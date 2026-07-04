@@ -19,6 +19,7 @@ const MenuManagement = () => {
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [showPromotionsOnly, setShowPromotionsOnly] = useState(false);
+  const [discountModal, setDiscountModal] = useState(null);
 
   const [formData, setFormData] = useState(emptyForm);
 
@@ -72,9 +73,27 @@ const MenuManagement = () => {
     });
   };
 
-  const togglePromotion = (item) => {
-    updateMenuItem(item.id, { isPromoted: !item.isPromoted });
-    showAlert(item.isPromoted ? 'Promoción quitada del plato.' : 'Plato marcado como promoción.');
+  const openDiscountModal = (item) => {
+    setDiscountModal({
+      item,
+      percent: item.discountPercent ?? 0
+    });
+  };
+
+  const applyDiscount = (e) => {
+    e.preventDefault();
+    if (!discountModal) return;
+
+    const percent = Math.max(0, Math.min(100, Number(discountModal.percent) || 0));
+    const { item } = discountModal;
+
+    updateMenuItem(item.id, {
+      isPromoted: percent > 0,
+      discountPercent: percent
+    });
+
+    showAlert(percent > 0 ? `Descuento del ${percent}% aplicado a ${item.name}.` : `Descuento quitado de ${item.name}.`);
+    setDiscountModal(null);
   };
 
   const visibleItems = showPromotionsOnly ? menuItems.filter(item => item.isPromoted) : menuItems;
@@ -93,7 +112,7 @@ const MenuManagement = () => {
           <Plus size={18} /> Agregar Plato
         </button>
         <button className="btn btn-secondary flex-1" onClick={() => setShowPromotionsOnly(prev => !prev)} style={{ padding: '0.85rem' }}>
-          <Sparkles size={16} /> {showPromotionsOnly ? 'Ver todos' : 'Promociones'}
+          <Sparkles size={16} /> {showPromotionsOnly ? 'Ver todos' : 'Descuentos'}
         </button>
       </div>
 
@@ -160,6 +179,59 @@ const MenuManagement = () => {
         </div>
       )}
 
+      {discountModal && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ padding: '1rem' }}>
+            <h3 style={{ fontSize: '1rem', margin: '0 0 0.25rem' }}>Descuento para {discountModal.item.name}</h3>
+            <p className="text-xs text-muted" style={{ margin: '0 0 0.75rem', lineHeight: 1.4 }}>
+              Elige el porcentaje y revisa cuánto bajará el precio del plato.
+            </p>
+            <form onSubmit={applyDiscount} className="flex flex-col gap-3">
+              <div className="flex items-center gap-2">
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  step="1"
+                  value={discountModal.percent}
+                  onChange={(e) => setDiscountModal(prev => prev ? { ...prev, percent: Number(e.target.value) } : prev)}
+                  style={{ flex: 1 }}
+                />
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={discountModal.percent}
+                  onChange={(e) => setDiscountModal(prev => prev ? { ...prev, percent: Number(e.target.value) } : prev)}
+                  style={{ width: '70px', padding: '0.5rem', fontSize: '0.85rem' }}
+                />
+                <span className="text-xs text-muted">%</span>
+              </div>
+
+              <div style={{ background: 'rgba(15,23,42,0.04)', borderRadius: '0.75rem', padding: '0.75rem' }}>
+                <div className="flex justify-between text-xs text-muted">
+                  <span>Precio original</span>
+                  <span>${discountModal.item.price.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-xs text-muted mt-1">
+                  <span>Descuento</span>
+                  <span>-${(discountModal.item.price * (discountModal.percent / 100)).toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-sm font-semibold mt-2">
+                  <span>Precio final</span>
+                  <span>${(discountModal.item.price * (1 - discountModal.percent / 100)).toFixed(2)}</span>
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                <button type="submit" className="btn btn-primary flex-1" style={{ padding: '0.65rem' }}>Aplicar</button>
+                <button type="button" className="btn btn-secondary flex-1" style={{ padding: '0.65rem' }} onClick={() => setDiscountModal(null)}>Cancelar</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       <div className="flex flex-col gap-3" style={{ maxHeight: '420px', overflowY: 'auto', paddingRight: '2px' }}>
         {visibleItems.map(item => (
           <div key={item.id} className="glass-panel flex justify-between items-start gap-3" style={{ padding: '1rem' }}>
@@ -174,9 +246,11 @@ const MenuManagement = () => {
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <h4 style={{ fontSize: '0.9rem', margin: 0 }}>{item.name}</h4>
-                  {item.isPromoted && <span className="badge btn-premium" style={{ padding: '0.15rem 0.4rem', fontSize: '0.65rem' }}>Promoción</span>}
+                  {item.isPromoted && <span className="badge btn-premium" style={{ padding: '0.15rem 0.4rem', fontSize: '0.65rem' }}>Con descuento</span>}
                 </div>
-                <p className="text-xs text-muted" style={{ marginTop: '2px' }}>${item.price.toFixed(2)} • {item.calories} kcal</p>
+                <p className="text-xs text-muted" style={{ marginTop: '2px' }}>
+                  {item.discountPercent > 0 ? `$${(item.price * (1 - item.discountPercent / 100)).toFixed(2)} ahora` : `$${item.price.toFixed(2)}`} • {item.calories} kcal
+                </p>
                 <p className="text-xs text-muted" style={{ fontSize: '0.7rem', marginTop: '4px' }}>
                   P: {item.protein}g | C: {item.carbs}g | G: {item.fats}g
                 </p>
@@ -187,8 +261,8 @@ const MenuManagement = () => {
               <button className="btn btn-secondary" style={{ padding: '0.4rem 0.6rem', fontSize: '0.72rem' }} onClick={() => startEditing(item)}>
                 <Edit3 size={14} /> Editar
               </button>
-              <button className="btn btn-secondary" style={{ padding: '0.4rem 0.6rem', fontSize: '0.72rem' }} onClick={() => togglePromotion(item)}>
-                <Sparkles size={14} /> {item.isPromoted ? 'Quitar promo' : 'Promocionar'}
+              <button className="btn btn-secondary" style={{ padding: '0.4rem 0.6rem', fontSize: '0.72rem' }} onClick={() => openDiscountModal(item)}>
+                <Sparkles size={14} /> {item.discountPercent > 0 ? 'Editar descuento' : 'Aplicar descuento'}
               </button>
               <button className="btn btn-secondary" style={{ padding: '0.4rem 0.6rem', fontSize: '0.72rem', color: 'var(--danger)' }} onClick={() => deleteMenuItem(item.id)}>
                 <Trash2 size={14} /> Borrar

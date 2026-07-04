@@ -55,6 +55,9 @@ const Dashboard = () => {
   };
 
   // Compile other secondary recommended meals
+  const sponsoredItems = menuItems.filter(item => item.isPromoted);
+  const regularItems = menuItems.filter(item => !item.isPromoted);
+
   const otherRecommendedMeals = [];
   defaultRestaurants.forEach(rest => {
     rest.meals.forEach(meal => {
@@ -231,7 +234,7 @@ const Dashboard = () => {
           {...sponsoredDrag.props}
           style={{ ...sponsoredDrag.props.style, display: 'flex', gap: '1rem', overflowX: 'auto', paddingBottom: '0.5rem' }}
         >
-          {menuItems.map(item => (
+          {sponsoredItems.length > 0 ? sponsoredItems.map(item => (
             <div 
               key={item.id} 
               className="glass-panel" 
@@ -241,6 +244,13 @@ const Dashboard = () => {
                 <span className="badge badge-ad" style={{ fontSize: '0.6rem', padding: '0.1rem 0.3rem' }}>Ad</span>
                 <span style={{ fontSize: '0.8rem', fontWeight: 'bold' }}>${item.price.toFixed(2)}</span>
               </div>
+              {item.imageUrl ? (
+                <img src={item.imageUrl} alt={item.name} style={{ width: '100%', height: '92px', objectFit: 'cover', borderRadius: '0.6rem', border: '1px solid var(--border-color)' }} />
+              ) : (
+                <div style={{ width: '100%', height: '92px', borderRadius: '0.6rem', border: '1px dashed var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: '0.7rem' }}>
+                  Imagen del plato
+                </div>
+              )}
               <h4 style={{ fontSize: '0.8rem', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.name}</h4>
               <p className="text-xs text-muted">FitBowl</p>
               <div className="flex justify-between text-xs mt-1" style={{ fontSize: '0.65rem' }}>
@@ -255,7 +265,11 @@ const Dashboard = () => {
                 <ShoppingBag size={12} /> Pedir
               </button>
             </div>
-          ))}
+          )) : (
+            <div className="text-xs text-muted" style={{ padding: '0.5rem 0' }}>
+              Aún no hay platos destacados para mostrar como patrocinados.
+            </div>
+          )}
         </div>
       </div>
 
@@ -304,14 +318,21 @@ const Dashboard = () => {
           {...recommendationDrag.props}
           style={{ ...recommendationDrag.props.style, display: 'flex', gap: '1rem', overflowX: 'auto', paddingBottom: '0.5rem' }}
         >
-          {otherRecommendedMeals.map((meal, index) => (
+          {[...sponsoredItems, ...regularItems, ...otherRecommendedMeals].slice(0, 8).map((meal, index) => (
             <div 
-              key={index} 
+              key={`${meal.id || meal.name}-${index}`} 
               className="glass-panel" 
               style={{ minWidth: '180px', maxWidth: '180px', padding: '0.85rem', gap: '0.35rem', background: 'var(--surface)', border: '1px solid var(--border-color)' }}
             >
+              {meal.imageUrl ? (
+                <img src={meal.imageUrl} alt={meal.name} style={{ width: '100%', height: '78px', objectFit: 'cover', borderRadius: '0.55rem', border: '1px solid var(--border-color)', marginBottom: '0.35rem' }} />
+              ) : (
+                <div style={{ width: '100%', height: '78px', borderRadius: '0.55rem', border: '1px dashed var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: '0.7rem', marginBottom: '0.35rem' }}>
+                  Plato
+                </div>
+              )}
               <h4 style={{ fontSize: '0.8rem', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{meal.name}</h4>
-              <p className="text-xs text-muted" style={{ fontSize: '0.7rem' }}>{meal.restaurant}</p>
+              <p className="text-xs text-muted" style={{ fontSize: '0.7rem' }}>{meal.restaurant || 'FitBowl'}</p>
               <div className="flex justify-between items-center mt-1">
                 <span className="badge" style={{ background: 'rgba(15, 23, 42, 0.05)', padding: '0.15rem 0.35rem', fontSize: '0.65rem' }}>{meal.calories} kcal</span>
                 <span style={{ fontSize: '0.8rem', fontWeight: 'bold' }}>S/. {meal.price.toFixed(2)}</span>
