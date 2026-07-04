@@ -6,16 +6,16 @@ import { AppProvider, useAppContext } from './context/AppContext';
 import UserLayout from './layouts/UserLayout';
 import BusinessLayout from './layouts/BusinessLayout';
 
-// Pages
-import Landing from './pages/common/Landing';
-import Onboarding from './pages/user/Onboarding';
-import Dashboard from './pages/user/Dashboard';
-import ExpandedRadar from './pages/user/ExpandedRadar';
-import Historial from './pages/user/Historial';
-import Comunidad from './pages/user/Comunidad';
-import Perfil from './pages/user/Perfil';
-import BusinessDashboard from './pages/business/BusinessDashboard';
-import MenuManagement from './pages/business/MenuManagement';
+// Views
+import Landing from './views/common/Landing';
+import Onboarding from './views/user/Onboarding';
+import Dashboard from './views/user/Dashboard';
+import ExpandedRadar from './views/user/ExpandedRadar';
+import Historial from './views/user/Historial';
+import Comunidad from './views/user/Comunidad';
+import Perfil from './views/user/Perfil';
+import BusinessDashboard from './views/business/BusinessDashboard';
+import MenuManagement from './views/business/MenuManagement';
 
 const AppRoutes = () => {
   const { appMode, userData } = useAppContext();

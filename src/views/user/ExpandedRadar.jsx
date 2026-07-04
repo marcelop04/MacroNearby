@@ -1,4 +1,62 @@
-export { default } from '../../views/user/ExpandedRadar';
+import React, { useState } from 'react';
+import { useAppContext } from '../../context/AppContext';
+import { useDragScroll } from '../../hooks/useDragScroll';
+import { Star, ShoppingBag, Lock, Sparkles, MapPin, Compass, Crown } from 'lucide-react';
+
+const ExpandedRadar = () => {
+  const { 
+    isPremium, addConsumption, menuItems, businessLocation, defaultRestaurants, 
+    getAIMatch, showAlert, hasBusinessSubscription, flashDiscountActive 
+  } = useAppContext();
+  const [selectedFilter, setSelectedFilter] = useState('Todos');
+  const [selectedRest, setSelectedRest] = useState(null);
+
+  // Map panning states
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
+  const [panStart, setPanStart] = useState({ x: 0, y: 0 });
+
+  // Hook up horizontal dragging for sliders
+  const filterDrag = useDragScroll();
+  const listDrag = useDragScroll();
+
+  const filters = [
+    'Todos', 'Saludable', 'Vegano', 'Carnes', 'Italiana', 'Criolla', 'Chifa',
+    ...(isPremium ? ['Alto Proteína', 'Bajo Sodio', 'Sin Azúcar', 'Sin Gluten'] : [])
+  ];
+
+  const userB2B = {
+    id: 1,
+    name: "FitBowl (Patrocinado)",
+    type: "Saludable",
+    distance: "120m",
+    ad: true,
+    position: businessLocation,
+    meals: menuItems
+  };
+
+  const allRestaurants = [userB2B, ...defaultRestaurants];
+  const aiMatch = getAIMatch();
+
+  // Filter restaurants AND meals inside them based on selected filter
+  const filteredRestaurantsData = allRestaurants.map(r => {
+    let matchingMeals = r.meals;
+
+    // Apply Precision Filters if selected (Premium only)
+    if (selectedFilter === 'Alto Proteína') {
+      matchingMeals = matchingMeals.filter(m => m.protein >= 30);
+    } else if (selectedFilter === 'Bajo Sodio') {
+      matchingMeals = matchingMeals.filter(m => m.isLowSodium);
+    } else if (selectedFilter === 'Sin Azúcar') {
+      matchingMeals = matchingMeals.filter(m => m.isZeroSugar);
+    } else if (selectedFilter === 'Sin Gluten') {
+      matchingMeals = matchingMeals.filter(m => m.isGlutenFree);
+    } else if (selectedFilter !== 'Todos') {
+      // Basic type filter
+      if (r.type !== selectedFilter) {
+        matchingMeals = [];
+      }
+    }
 
     return {
       ...r,
